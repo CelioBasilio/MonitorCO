@@ -10,7 +10,7 @@
         android:id="@+id/labelManometro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Manômetro"
+        android:text="Hospedagem Nº 01"
         android:textSize="24sp" />
 
     <ProgressBar
