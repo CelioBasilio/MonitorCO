@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
         janelaIcon = findViewById(R.id.janelaIcon)
         alertButton = findViewById(R.id.alertButton) // Botão para parar o alerta
 
-        updateManometro(75) // Exemplo de valor do sensor
+        updateManometro(70) // Exemplo de valor do sensor
         updateJanelaState(true)
 
         alertButton.setOnClickListener {
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
         }
 
         // Aqui você deve verificar a lógica de CO e iniciar o alerta
-        checkCOLevel(75) // Use o valor real do sensor
+        checkCOLevel(50) // Use o valor real do sensor
     }
 
     private fun checkCOLevel(value: Int) {
