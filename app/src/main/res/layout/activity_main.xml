@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/labelManometro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Manômetro"
+        android:textSize="24sp" />
+
+    <ProgressBar
+        android:id="@+id/manometro"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:progress="0"
+        android:background="@android:color/darker_gray"
+        android:progressTint="@android:color/holo_green_light" />
+
+    <ImageView
+        android:id="@+id/janelaIcon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/ic_window_closed"
+        android:contentDescription="Janela" />
+
+    <Button
+        android:id="@+id/alertButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Parar Alerta"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>
