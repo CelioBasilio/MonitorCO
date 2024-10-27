@@ -1,119 +1,89 @@
 package com.example.monitorco
-import android.content.Context
+
 import android.graphics.drawable.Drawable
-import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.monitorco.ui.theme.MonitorCOTheme
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var manometro: ProgressBar
-    private lateinit var janelaIcon: ImageView
-    private lateinit var alertButton: Button
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: HospedagemAdapter
     private var mediaPlayer: MediaPlayer? = null
+    var isAlertActive: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Usando Compose para a interface
-        setContent {
-            MonitorCOTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Android")
-                }
-            }
-        }
-
-        // Definindo o layout da activity_main.xml
         setContentView(R.layout.activity_main)
 
-        manometro = findViewById(R.id.manometro)
-        janelaIcon = findViewById(R.id.janelaIcon)
-        alertButton = findViewById(R.id.alertButton) // Botão para parar o alerta
+        recyclerView = findViewById(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
-        updateManometro(10) // Exemplo de valor do sensor
-        updateJanelaState(true)
+        // Passa a referência da MainActivity ao adapter
+        adapter = HospedagemAdapter(this, mutableListOf())
+        recyclerView.adapter = adapter
 
-        alertButton.setOnClickListener {
-            stopAlert()
-        }
-
-        // Aqui você deve verificar a lógica de CO e iniciar o alerta
-        checkCOLevel(10) // Use o valor real do sensor
+        // Exemplo inicial de hospedagem
+        addNewHospedagem("Hospedagem Nº 01", 20f, ContextCompat.getDrawable(this, R.drawable.ic_window_closed)!!)
     }
 
-    private fun checkCOLevel(value: Int) {
-        if (value >= 70) { // Nível vermelho
+    private fun addNewHospedagem(label: String, value: Float, icon: Drawable) {
+        val hospedagem = Hospedagem(label, value, icon)
+        adapter.addHospedagem(hospedagem)
+        checkCOLevels(value)
+    }
+
+    private fun checkCOLevels(value: Float) {
+        if (value >= 20) {
             startAlert()
         }
     }
 
     private fun startAlert() {
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0)
+        if (!isAlertActive) {
+            isAlertActive = true
+            mediaPlayer = MediaPlayer.create(this, R.raw.alert_sound)
+            mediaPlayer?.start()
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.alert_sound)
-        mediaPlayer?.isLooping = true
-        mediaPlayer?.start()
-    }
-
-    private fun stopAlert() {
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
-    }
-
-    private fun updateManometro(value: Int) {
-        manometro.progress = value
-        when {
-            value < 40 -> manometro.progressTintList = ContextCompat.getColorStateList(this, R.color.green)
-            value < 70 -> manometro.progressTintList = ContextCompat.getColorStateList(this, R.color.yellow)
-            else -> {
-                manometro.progressTintList = ContextCompat.getColorStateList(this, R.color.red)
-                startAlert() // Iniciar alerta se o nível for vermelho
+            // Repetir o som do alerta
+            val handler = android.os.Handler()
+            val runnable = object : Runnable {
+                override fun run() {
+                    if (isAlertActive) {
+                        mediaPlayer?.start() // Reproduz o som novamente
+                        handler.postDelayed(this, 10) // Repete a cada 0,010 segundos (ajuste se necessário)
+                    }
+                }
             }
+            handler.postDelayed(runnable, 3000) // Começa a repetição após 3 segundos
+
+            // Ajusta a altura do RecyclerView se necessário
+            //recyclerView.layoutParams.height = 300 // altura quando o alerta está ativo
+            //recyclerView.requestLayout()
         }
     }
 
-    private fun updateJanelaState(isOpen: Boolean) {
-        val icon: Drawable? = if (isOpen) {
-            ContextCompat.getDrawable(this, R.drawable.ic_window_open)
-        } else {
-            ContextCompat.getDrawable(this, R.drawable.ic_window_closed)
+    fun stopAlert() { // Método acessível a partir do Adapter
+        if (isAlertActive) {
+            isAlertActive = false
+            mediaPlayer?.stop()
+            mediaPlayer?.release()
+            mediaPlayer = null
+            // Retorna à altura original do RecyclerView
+            //recyclerView.layoutParams.height = 400 // altura original do CardView
+            //recyclerView.requestLayout()
+
+            // Notifica o Adapter para atualizar a visibilidade do botão
+            adapter.notifyDataSetChanged()
         }
-        janelaIcon.setImageDrawable(icon)
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MonitorCOTheme {
-        Greeting("Android")
+    private fun playAlertSound() {
+        mediaPlayer = MediaPlayer.create(this, R.raw.alert_sound)
+        mediaPlayer?.start()
     }
 }
