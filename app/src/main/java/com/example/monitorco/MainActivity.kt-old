@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 //            startActivity(Intent(this, LoginActivity::class.java))
 //            finish() // Encerra a MainActivity se não estiver logado
 //            return
-//        }loadHospedagens
+//        }
 
         setContentView(R.layout.activity_main)
         initializeUI()
@@ -77,22 +77,17 @@ class MainActivity : ComponentActivity() {
     fun loadHospedagens() {
         CoroutineScope(Dispatchers.Main).launch {
             // Chamando makeApiRequest de forma assíncrona
-            val urlHardware_1 = "https://api.thingspeak.com/channels/2704097/feeds.json?results=1"
-            val resultcCO_1 = withContext(Dispatchers.IO) { makeApiRequest(urlHardware_1) }
-
-            val urlHardware_2 = "https://api.thingspeak.com/channels/2720761/feeds.json?results=1"
-            val resultcCO_2 = withContext(Dispatchers.IO) { makeApiRequest(urlHardware_2) }
+            val resultcCO = withContext(Dispatchers.IO) { makeApiRequest() }
 
             val icon = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_window_closed)
             if (icon != null) {
-                addNewHospedagem("Hospedagem TESTE Nº 01", resultcCO_1, icon)
-                addNewHospedagem("Hospedagem MAQUETE Nº 02", resultcCO_2, icon)
-
+                addNewHospedagem("Hospedagem Nº 01", resultcCO, icon)
             } else {
                 Toast.makeText(this@MainActivity, "Ícone não encontrado", Toast.LENGTH_LONG).show()
             }
         }
     }
+
 
     private fun addNewHospedagem(label: String, value: Float, icon: Drawable) {
         val hospedagem = Hospedagem(label, value, icon)
@@ -142,6 +137,22 @@ class MainActivity : ComponentActivity() {
     }
 
     ////// AS FUNÇÕES ABAIXO SÃO DE COMUNICAÇÃO E RESULTADO DO BROKER
+    fun startUpdatingHospedagens() {
+        CoroutineScope(Dispatchers.Main).launch {
+            while (isActive) {  // isActive verifica se a coroutine está ativa
+                val resultcCO = withContext(Dispatchers.IO) { makeApiRequest() }
+
+                val icon = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_window_closed)
+                if (icon != null) {
+                    addNewHospedagem("Hospedagem Nº 01", resultcCO, icon)
+                } else {
+                    Toast.makeText(this@MainActivity, "Ícone não encontrado", Toast.LENGTH_LONG).show()
+                }
+
+                delay(5000)  // Aguardar 5 segundos antes da próxima atualização
+            }
+        }
+    }
 
     private fun fetchJson(url: String) {
         lifecycleScope.launch {
@@ -179,11 +190,10 @@ class MainActivity : ComponentActivity() {
         return gson.fromJson(jsonData, Channel::class.java)
     }
 
-    private suspend fun makeApiRequest(urlbroker: String): Float {
+    private suspend fun makeApiRequest(): Float {
         val client = OkHttpClient()
         val request = Request.Builder()
-//            .url("https://api.thingspeak.com/channels/2704097/feeds.json?results=2")
-            .url(urlbroker)
+            .url("https://api.thingspeak.com/channels/2704097/feeds.json?results=2")
             .build()
 
         val response = client.newCall(request).execute()
