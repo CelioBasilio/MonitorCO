@@ -43,18 +43,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        // Verifica a conexão com a internet
-//        if (!Utils.isNetworkAvailable(this)) {
-//            showNoConnectionAlert()
-//            return
-//        }
-//
-//        // Verifica se o usuário está logado, caso contrário redireciona para LoginActivity
-//        if (!isUserLoggedIn()) {
-//            startActivity(Intent(this, LoginActivity::class.java))
-//            finish() // Encerra a MainActivity se não estiver logado
-//            return
-//        }loadHospedagens
+        // Verifica a conexão com a internet
+        if (!Utils.isNetworkAvailable(this)) {
+            showNoConnectionAlert()
+            return
+        }
+
+        // Verifica se o usuário está logado, caso contrário redireciona para LoginActivity
+        if (!isUserLoggedIn()) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish() // Encerra a MainActivity se não estiver logado
+            return
+        }
 
         setContentView(R.layout.activity_main)
         initializeUI()
