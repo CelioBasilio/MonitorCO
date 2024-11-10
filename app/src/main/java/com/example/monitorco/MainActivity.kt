@@ -3,35 +3,14 @@ package com.example.monitorco
 import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.content.Intent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.monitorco.utils.Utils
-
-import androidx.lifecycle.lifecycleScope
-import com.google.gson.Gson
-import kotlinx.coroutines.launch
-
-
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONObject
-
-
-data class Feed(
-    val created_at: String,
-    val entry_id: Int,
-    val field1: String?
-)
-
-data class Channel(
-    val feeds: List<Feed>
-)
-
 
 class MainActivity : ComponentActivity() {
 
@@ -40,68 +19,73 @@ class MainActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
     var isAlertActive: Boolean = false
 
+    private val updateInterval = 5000L // Intervalo de atualização em milissegundos (5 segundos)
+    private val handler = android.os.Handler() // Handler para controle do Runnable
+    private lateinit var updateRunnable: Runnable // Runnable para atualização periódica
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Verifica a conexão com a internet
-        if (!Utils.isNetworkAvailable(this)) {
-            showNoConnectionAlert()
-            return
-        }
-
-        // Verifica se o usuário está logado, caso contrário redireciona para LoginActivity
-        if (!isUserLoggedIn()) {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish() // Encerra a MainActivity se não estiver logado
-            return
-        }
-
         setContentView(R.layout.activity_main)
-        initializeUI()
-        loadHospedagens()
+        initializeUI()  // Inicializa o RecyclerView com hospedagens fixas
+        startMonitoring() // Inicia o monitoramento contínuo
     }
-
 
     private fun initializeUI() {
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = HospedagemAdapter(this, mutableListOf())
+
+        val icon = ContextCompat.getDrawable(this, R.drawable.ic_window_closed)
+        // Inicialize o adapter com as hospedagens fixas
+        val hospedagensIniciais = mutableListOf(
+            Hospedagem("Hospedagem TESTE Nº 01", 0.0f, icon!!),
+            Hospedagem("Hospedagem MAQUETE Nº 02", 0.0f, icon)
+        )
+
+        adapter = HospedagemAdapter(this, hospedagensIniciais)
         recyclerView.adapter = adapter
     }
 
-    private fun showNoConnectionAlert() {
-        Toast.makeText(this, "Por favor, conecte-se à internet.", Toast.LENGTH_LONG).show()
-        finish() // Encerra o aplicativo
+    private fun startMonitoring() {
+        updateRunnable = object : Runnable {
+            override fun run() {
+                updateHospedagens() // Atualiza os dados de CO periodicamente
+                handler.postDelayed(this, updateInterval) // Reagenda o Runnable
+            }
+        }
+        handler.post(updateRunnable) // Inicia o ciclo de monitoramento
     }
 
-    fun loadHospedagens() {
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacks(updateRunnable) // Remove o Runnable ao destruir a atividade
+    }
+
+    private fun updateHospedagens() {
         CoroutineScope(Dispatchers.Main).launch {
-            // Chamando makeApiRequest de forma assíncrona
             val urlHardware_1 = "https://api.thingspeak.com/channels/2704097/feeds.json?results=1"
             val resultcCO_1 = withContext(Dispatchers.IO) { makeApiRequest(urlHardware_1) }
 
             val urlHardware_2 = "https://api.thingspeak.com/channels/2720761/feeds.json?results=1"
             val resultcCO_2 = withContext(Dispatchers.IO) { makeApiRequest(urlHardware_2) }
 
-            val icon = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_window_closed)
-            if (icon != null) {
-                addNewHospedagem("Hospedagem TESTE Nº 01", resultcCO_1, icon)
-                addNewHospedagem("Hospedagem MAQUETE Nº 02", resultcCO_2, icon)
+            // Atualiza os valores de CO das hospedagens existentes no adapter
+            adapter.updateHospedagem(0, resultcCO_1) // Atualiza a primeira hospedagem
+            adapter.updateHospedagem(1, resultcCO_2) // Atualiza a segunda hospedagem
 
-            } else {
-                Toast.makeText(this@MainActivity, "Ícone não encontrado", Toast.LENGTH_LONG).show()
-            }
+            checkCOLevels(resultcCO_1)
+            checkCOLevels(resultcCO_2)
         }
     }
 
-    private fun addNewHospedagem(label: String, value: Float, icon: Drawable) {
-        val hospedagem = Hospedagem(label, value, icon)
-        adapter.addHospedagem(hospedagem)
-        checkCOLevels(value)
-    }
+//    private fun checkCOLevels(value: Float) {
+//        val coLimit = 2f // Limite padrão de CO
+//        if (value >= coLimit) {
+//            startAlert()
+//        }
+//    }
 
     private fun checkCOLevels(value: Float) {
-        if (value >= 20) {
+        if (value >= 5) {  // Agora o alerta será acionado quando o valor atingir 6
             startAlert()
         }
     }
@@ -118,7 +102,7 @@ class MainActivity : ComponentActivity() {
             override fun run() {
                 if (isAlertActive) {
                     mediaPlayer?.start()
-                    handler.postDelayed(this, 3000) // Ajuste o intervalo de repetição
+                    handler.postDelayed(this, 3000) // Ajuste o intervalo de repetição do som
                 }
             }
         }
@@ -135,74 +119,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
-    private fun isUserLoggedIn(): Boolean {
-        val sharedPrefs = getSharedPreferences("MeuAppPrefs", MODE_PRIVATE)
-        return sharedPrefs.getBoolean("isLoggedIn", false)
-    }
-
-    ////// AS FUNÇÕES ABAIXO SÃO DE COMUNICAÇÃO E RESULTADO DO BROKER
-
-    private fun fetchJson(url: String) {
-        lifecycleScope.launch {
-            try {
-                val jsonData = makeNetworkRequest(url)
-                jsonData?.let {
-                    println("JSON recebido: $it")
-                    val channel = parseJson(it)
-                    // Se precisar, continue a processar os dados
-                } ?: println("Erro ao buscar dados.")
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this@MainActivity, "Erro ao acessar os dados: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    private suspend fun makeNetworkRequest(url: String): String? {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url(url)
-            .build()
-
-        return client.newCall(request).execute().use { response ->
-            if (response.isSuccessful) {
-                response.body?.string()
-            } else {
-                null
-            }
-        }
-    }
-
-    private fun parseJson(jsonData: String): Channel {
-        val gson = Gson()
-        return gson.fromJson(jsonData, Channel::class.java)
-    }
-
     private suspend fun makeApiRequest(urlbroker: String): Float {
         val client = OkHttpClient()
-        val request = Request.Builder()
-//            .url("https://api.thingspeak.com/channels/2704097/feeds.json?results=2")
-            .url(urlbroker)
-            .build()
+        val request = Request.Builder().url(urlbroker).build()
 
         val response = client.newCall(request).execute()
         val responseData = response.body?.string()
 
         return if (response.isSuccessful && responseData != null) {
-            // Extraia o valor do CO
             val field1Value = extractField1FromJson(responseData)
-            field1Value.toFloatOrNull() ?: 0.0f  // Converta para Float, ou use 0.0f se não puder converter
+            field1Value.toFloatOrNull() ?: 0.0f
         } else {
-            0.0f  // Valor padrão em caso de falha
+            0.0f
         }
     }
 
-    fun extractField1FromJson(jsonData: String): String {
+    private fun extractField1FromJson(jsonData: String): String {
         return jsonData
             .substringAfter("\"feeds\":[{")
             .substringAfter("\"field1\":\"")
             .substringBefore("\"")
     }
-
 }

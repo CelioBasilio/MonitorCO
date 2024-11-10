@@ -13,10 +13,9 @@ import android.animation.ObjectAnimator
 import android.graphics.Color
 import android.view.animation.AccelerateDecelerateInterpolator
 
-
 class HospedagemAdapter(
         private val context: Context,
-        private var hospedagens: List<Hospedagem>,
+        private var hospedagens: MutableList<Hospedagem>
 ) : RecyclerView.Adapter<HospedagemAdapter.ViewHolder>() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -45,14 +44,15 @@ class HospedagemAdapter(
                 holder.janelaIcon.setImageDrawable(hospedagem.icon)
 
                 // Verifica se o valor é maior ou igual a 20 para animar a cor de fundo
-                if (hospedagem.value >= 20) {
+                if (hospedagem.value >= 5) {
                         startColorAnimation(holder.itemView)
                 } else {
                         stopColorAnimation(holder.itemView)
                 }
 
                 // Controlar a visibilidade do botão com base no estado do alerta
-                holder.alertButton.visibility = if ((context as MainActivity).isAlertActive) View.VISIBLE else View.GONE
+                holder.alertButton.visibility =
+                        if ((context as MainActivity).isAlertActive) View.VISIBLE else View.GONE
         }
 
         private fun startColorAnimation(view: View) {
@@ -73,10 +73,11 @@ class HospedagemAdapter(
 
         override fun getItemCount() = hospedagens.size
 
-        fun addHospedagem(hospedagem: Hospedagem) {
-                hospedagens = hospedagens + hospedagem
-                notifyItemInserted(hospedagens.size - 1)
+        // Função para atualizar o valor de uma hospedagem existente
+        fun updateHospedagem(index: Int, newValue: Float) {
+                if (index in hospedagens.indices) {
+                        hospedagens[index].value = newValue
+                        notifyItemChanged(index) // Notifica o RecyclerView que o item foi atualizado
+                }
         }
 }
-
-data class Hospedagem(val label: String, val value: Float, val icon: Drawable)
