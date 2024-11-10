@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".activities.ManageCardsActivity">
+
+    <!-- Título da Tela -->
+    <TextView
+        android:id="@+id/tvManageCardsTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Gerenciar Cards"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="16dp"/>
+
+    <!-- Campo para o nome do Card -->
+    <EditText
+        android:id="@+id/edtCardName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nome do Card"
+        android:inputType="text"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Campo para o número da hospedagem -->
+    <EditText
+        android:id="@+id/edtHospedagemNumero"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Número da Hospedagem"
+        android:inputType="number"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"/>
+
+
+    <!-- Exibe as informações do card -->
+    <TextView
+        android:id="@+id/txtCardInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Informações do Card"
+        android:textSize="18sp"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"/>
+
+    <!-- Botões para adicionar e mostrar tópicos -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnAddCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Adicionar Card"
+            android:padding="8dp"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnShowTopics"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mostrar Tópicos"
+            android:padding="8dp"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Botão para salvar o card -->
+    <Button
+        android:id="@+id/btnSaveCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Salvar Card"
+        android:padding="12dp"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>
