@@ -55,8 +55,8 @@ class ManometerView @JvmOverloads constructor(
 
         // Desenhar as faixas coloridas
         drawColorArc(canvas, 0f, 10f, Color.GREEN)
-        drawColorArc(canvas, 10f, 20f, Color.YELLOW)
-        drawColorArc(canvas, 20f, 35f, Color.RED)
+        drawColorArc(canvas, 10f, 15f, Color.YELLOW)
+        drawColorArc(canvas, 15f, 35f, Color.RED)
 
         // Desenhar as marcações
         drawMarkings(canvas)
@@ -128,7 +128,7 @@ class ManometerView @JvmOverloads constructor(
         // Determina a cor do círculo com base no valor
         val circleColor = when {
             currentValue <= 10 -> Color.GREEN
-            currentValue <= 20 -> Color.YELLOW
+            currentValue <= 15 -> Color.YELLOW
             else -> Color.RED
         }
 
