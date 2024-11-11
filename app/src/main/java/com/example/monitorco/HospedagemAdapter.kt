@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.animation.ObjectAnimator
 import android.graphics.Color
 import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.core.content.ContextCompat
 
 class HospedagemAdapter(
         private val context: Context,
@@ -37,23 +38,39 @@ class HospedagemAdapter(
                 return ViewHolder(view)
         }
 
+//        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+//                val hospedagem = hospedagens[position]
+//                holder.label.text = hospedagem.label
+//                holder.manometer.updateValue(hospedagem.value)
+//                holder.janelaIcon.setImageDrawable(hospedagem.icon)
+//
+//                // Verifica se o valor é maior ou igual a 20 para animar a cor de fundo
+//                if (hospedagem.value >= 5) {
+//                        startColorAnimation(holder.itemView)
+//                } else {
+//                        stopColorAnimation(holder.itemView)
+//                }
+//
+////                 Controlar a visibilidade do botão com base no estado do alerta
+//                holder.alertButton.visibility =
+//                        if ((context as MainActivity).isAlertActive) View.VISIBLE else View.GONE
+//        }
+
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
                 val hospedagem = hospedagens[position]
                 holder.label.text = hospedagem.label
                 holder.manometer.updateValue(hospedagem.value)
-                holder.janelaIcon.setImageDrawable(hospedagem.icon)
 
-                // Verifica se o valor é maior ou igual a 20 para animar a cor de fundo
+                // Define o ícone com base no valor de hospedagem
                 if (hospedagem.value >= 5) {
+                        holder.janelaIcon.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_window_open))
                         startColorAnimation(holder.itemView)
                 } else {
+                        holder.janelaIcon.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_window_closed))
                         stopColorAnimation(holder.itemView)
                 }
-
-                // Controlar a visibilidade do botão com base no estado do alerta
-                holder.alertButton.visibility =
-                        if ((context as MainActivity).isAlertActive) View.VISIBLE else View.GONE
         }
+
 
         private fun startColorAnimation(view: View) {
                 val colorFrom = Color.argb(255, 255, 0, 0) // Vermelho

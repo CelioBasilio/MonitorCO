@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
 //    }
 
     private fun checkCOLevels(value: Float) {
-        if (value >= 5) {  // Agora o alerta será acionado quando o valor atingir 6
+        if (value >= 7) {  // Agora o alerta será acionado quando o valor atingir 6
             startAlert()
         }
     }
