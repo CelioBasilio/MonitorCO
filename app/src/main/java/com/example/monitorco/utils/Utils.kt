@@ -5,7 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import com.example.monitorco.api.RetrofitInstance
-import com.example.monitorco.model.Login
+import com.example.monitorco.models.Login
 import retrofit2.HttpException
 import java.io.IOException
 

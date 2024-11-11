@@ -1,4 +1,5 @@
-package com.example.monitorco.model
+package com.example.monitorco.models
+
 
 data class Login(
     val email: String,

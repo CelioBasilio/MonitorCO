@@ -1,7 +1,7 @@
 package com.example.monitorco.api
 
-import com.example.monitorco.model.Usuario
-import com.example.monitorco.model.Login
+import com.example.monitorco.models.Usuario
+import com.example.monitorco.models.Login
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST

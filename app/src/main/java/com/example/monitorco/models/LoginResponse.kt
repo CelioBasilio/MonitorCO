@@ -1,4 +1,4 @@
-package com.example.monitorco.model
+package com.example.monitorco.models
 
 data class LoginResponse(
     val success: Boolean,
