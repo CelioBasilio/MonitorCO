@@ -17,7 +17,7 @@ class ManometerView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     private var currentValue = 0f
-    private val totalValue = 17f
+    private val totalValue = 35f
 
     private val paint = Paint().apply {
         style = Paint.Style.STROKE
@@ -54,9 +54,9 @@ class ManometerView @JvmOverloads constructor(
         super.onDraw(canvas)
 
         // Desenhar as faixas coloridas
-        drawColorArc(canvas, 0f, 05f, Color.GREEN) // Verde de 0 a 5
-        drawColorArc(canvas, 05f, 10f, Color.YELLOW) // Amarelo de 6 a 10
-        drawColorArc(canvas, 10f, totalValue, Color.RED) // Vermelho de 11 até o máximo
+        drawColorArc(canvas, 0f, 10f, Color.GREEN)
+        drawColorArc(canvas, 10f, 15f, Color.YELLOW)
+        drawColorArc(canvas, 15f, 35f, Color.RED)
 
         // Desenhar as marcações
         drawMarkings(canvas)
@@ -67,7 +67,6 @@ class ManometerView @JvmOverloads constructor(
         // Desenhar o valor no centro
         drawValue(canvas)
     }
-
 
     private fun drawColorArc(canvas: Canvas, start: Float, end: Float, color: Int) {
         val startAngle = 180f + (start / totalValue * 180f)
@@ -101,11 +100,10 @@ class ManometerView @JvmOverloads constructor(
     }
 
     private fun drawMarkings(canvas: Canvas) {
-        // Ajustar para ter 16 traços distribuídos uniformemente ao longo do arco
-        val step = totalValue / 15 // Passo entre as marcações, baseado no totalValue dividido pelo número de traços desejado
-        val totalSteps = 15 // Total de traços a desenhar
+        val step = 5f
+        val totalSteps = (totalValue / step).toInt()
 
-        for (i in 0 until totalSteps) { // Use `until` para garantir que desenha o número correto de traços
+        for (i in 0..totalSteps) {
             val value = i * step
             val angle = 180f + (value / totalValue * 180f)
             val radian = Math.toRadians(angle.toDouble()).toFloat()
@@ -121,7 +119,6 @@ class ManometerView @JvmOverloads constructor(
         }
     }
 
-
     private fun drawValue(canvas: Canvas) {
         val valueText = currentValue.toInt().toString() // Converte o valor atual para String
         val circleRadius = 70f // Raio do círculo
@@ -130,8 +127,8 @@ class ManometerView @JvmOverloads constructor(
 
         // Determina a cor do círculo com base no valor
         val circleColor = when {
-            currentValue <= 5 -> Color.GREEN
-            currentValue <= 10 -> Color.YELLOW
+            currentValue <= 10 -> Color.GREEN
+            currentValue <= 15 -> Color.YELLOW
             else -> Color.RED
         }
 
