@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Campos de entrada de texto -->
     <EditText
         android:id="@+id/nomeEditText"
         android:layout_width="match_parent"
@@ -40,6 +39,7 @@
         android:id="@+id/confirmarSenhaEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="16dp"
         android:hint="Confirmar Senha"
         android:inputType="textPassword"
         android:minHeight="48dp" />
@@ -51,22 +51,12 @@
         android:hint="CNPJ"
         android:minHeight="48dp" />
 
-    <!-- Botão de cadastro -->
     <Button
         android:id="@+id/cadastrarButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Cadastrar" />
 
-    <!-- ProgressBar para indicar carregamento -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
-
-    <!-- Link para a tela de login -->
     <TextView
         android:id="@+id/loginLink"
         android:layout_width="wrap_content"
@@ -74,7 +64,7 @@
         android:layout_marginTop="16dp"
         android:clickable="true"
         android:focusable="true"
+        android:minHeight="48dp"
         android:text="Já tem uma conta? Faça login"
         android:textColor="@android:color/holo_blue_dark" />
-
 </LinearLayout>
