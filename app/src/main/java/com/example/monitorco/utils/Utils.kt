@@ -4,12 +4,11 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import com.google.firebase.FirebaseApp
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.monitorco.api.RetrofitInstance
+import com.example.monitorco.model.Login
 
 object Utils {
 
-    // Verifica se há conexão de rede disponível
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -22,17 +21,8 @@ object Utils {
         }
     }
 
-    // Inicializa o Firebase (para garantir que ele esteja pronto antes do uso)
-    fun initializeFirebase(context: Context) {
-        try {
-            FirebaseApp.initializeApp(context)
-            FirebaseFirestore.getInstance() // Para garantir que o Firestore esteja pronto
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
 
-    // Validação de CNPJ
+
     fun isCNPJValido(cnpj: String): Boolean {
         val cnpjLimpo = cnpj.replace("[^0-9]".toRegex(), "")
         if (cnpjLimpo.length != 14) return false
@@ -50,4 +40,17 @@ object Utils {
         val resto = soma % 11
         return if (resto < 2) 0 else 11 - resto
     }
+
+    suspend fun isServerAvailable(email: String, senha: String): Boolean {
+        val login = Login(email, senha)
+        return try {
+            val response = RetrofitInstance.api.login(login)
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+
+    // Outras funções de validação podem ser adicionadas aqui
 }
