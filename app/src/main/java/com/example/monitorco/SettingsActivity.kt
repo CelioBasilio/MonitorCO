@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.core.content.edit
 import android.widget.Toast
@@ -15,10 +16,11 @@ class SettingsActivity : ComponentActivity() {
     // Declaração do campo de entrada onde o usuário pode inserir o novo limite de CO
     private lateinit var coLimitInput: EditText
 
-    // Método chamado quando a activity é criada
+//    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_settings) // Define o layout da activity
+        setContentView(R.layout.activity_settings)
 
         // Inicializa a referência ao campo de entrada (EditText) onde o usuário digita o limite
         coLimitInput = findViewById(R.id.coLimitInput)
@@ -57,6 +59,7 @@ class SettingsActivity : ComponentActivity() {
                 Toast.makeText(this, "Por favor, insira um valor válido", Toast.LENGTH_SHORT).show()
             }
         }
+//        botaoVoltar()
     }
 
     // Método estático para iniciar a SettingsActivity a partir de outra activity
@@ -69,4 +72,11 @@ class SettingsActivity : ComponentActivity() {
             context.startActivity(intent)
         }
     }
+
+//    fun botaoVoltar(){
+//        imgVoltar.setOnClickListener {
+//            val intent = Intent(this@SettingsActivity, MainActivity::class.java)
+//            startActivity(intent)
+//        }
+//    }
 }

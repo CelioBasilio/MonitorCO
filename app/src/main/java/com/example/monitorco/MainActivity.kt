@@ -35,7 +35,8 @@ class MainActivity : ComponentActivity() {
     private val handler = Handler(Looper.getMainLooper()) // Usa o Looper da thread principal
     private var updateRunnable: Runnable? = null // Runnable para atualização periódica
     private var alertCooldownTime: Long = 0 // Armazena o tempo em que o alerta foi desativado
-    private val cooldownDuration = 5 * 60 * 1000L // Duração do cooldown em milissegundos (5 minutos)
+    private val cooldownDuration =
+        5 * 60 * 1000L // Duração do cooldown em milissegundos (5 minutos)
 
     // Variáveis relacionadas ao salvamento no banco de dados
     private var isSavingToDatabase: Boolean = false
@@ -91,7 +92,10 @@ class MainActivity : ComponentActivity() {
         updateRunnable = object : Runnable {
             override fun run() {
                 updateHospedagens() // Atualiza os dados de CO periodicamente
-                handler.postDelayed(this, updateInterval) // Reagenda o Runnable para execução periódica
+                handler.postDelayed(
+                    this,
+                    updateInterval
+                ) // Reagenda o Runnable para execução periódica
             }
         }
         updateRunnable?.let { handler.post(it) } // Inicia o monitoramento
@@ -132,7 +136,8 @@ class MainActivity : ComponentActivity() {
         val firestore = FirebaseFirestore.getInstance()
         val eventData = hashMapOf(
             "timestamp" to System.currentTimeMillis(),
-            "date" to java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(System.currentTimeMillis()),
+            "date" to java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                .format(System.currentTimeMillis()),
             "cardLabel" to cardLabel,
             "coLevel" to coLevel,
             "alertState" to alertState
@@ -183,7 +188,11 @@ class MainActivity : ComponentActivity() {
                 isLooping = true
                 setOnPreparedListener { start() }
                 setOnErrorListener { _, _, _ ->
-                    Toast.makeText(this@MainActivity, "Erro ao carregar o som de alerta", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Erro ao carregar o som de alerta",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     release()
                     false
                 }
@@ -200,7 +209,8 @@ class MainActivity : ComponentActivity() {
         if (!isAlertActive) return
 
         isAlertActive = false
-        alertCooldownTime = System.currentTimeMillis() + cooldownDuration // Define o cooldown de 5 minutos
+        alertCooldownTime =
+            System.currentTimeMillis() + cooldownDuration // Define o cooldown de 5 minutos
 
         // Se um índice for passado, desative o alerta dessa hospedagem
         if (hospedagemIndex != null && hospedagemIndex in adapter.hospedagens.indices) {
@@ -227,7 +237,11 @@ class MainActivity : ComponentActivity() {
             if (!hospedagem.isAlertActive && currentTime > alertCooldownTime) {
                 hospedagem.isAlertActive = true
                 isAlertActive = true
-                Toast.makeText(this, "Alerta! Alto nível de CO detectado em $label", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Alerta! Alto nível de CO detectado em $label",
+                    Toast.LENGTH_SHORT
+                ).show()
                 startAlert() // Inicia o alerta sonoro
                 startSavingEvents(label, value) // Inicia o salvamento dos eventos
             }
