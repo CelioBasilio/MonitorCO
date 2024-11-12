@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">MonitorCO</string>
+    <string name="welcome">Bem Vindo ao</string>
+    <string name="new_account">Criar uma conta</string>
+    <string name="login">Login</string>
+    <string name="enter">Entrar</string>
+    <string name="email">Email</string>
+    <string name="password">Senha</string>
+    <string name="forgot_password">Esqueceu a senha?</string>
+    <string name="havent_account">Não possui uma conta?</string>
+    <string name="login_up">Se registrar</string>
+    <string name="register">Cadastrar</string>
+    <string name="company_name">Nome da Empresa</string>
+    <string name="adress">Endereço</string>
+    <string name="confirm_password">Confirmar Senha</string>
+    <string name="cnpj">CNPJ</string>
+    <string name="settings">Configurações</string>
+    <string name="define_co_alert_level">Defina o nível de alerta de CO:</string>
+    <string name="co_alert_level">Nível de alerta</string>
+    <string name="host">Hospedagem</string>
+    <string name="level_co">Nível de CO: 7</string>
 </resources>

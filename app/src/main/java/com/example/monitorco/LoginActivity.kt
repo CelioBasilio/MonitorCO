@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -20,13 +21,17 @@ class LoginActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
 
+    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        botaoVoltar()
 
         // Inicializa o Firebase
         FirebaseApp.initializeApp(this)
 
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.login_activity)
 
         // Inicializa Firebase Authentication
         auth = FirebaseAuth.getInstance()
@@ -96,5 +101,12 @@ class LoginActivity : ComponentActivity() {
                 // Caso ocorra um erro ao tentar autenticar, exibe a mensagem
                 Toast.makeText(this, "Erro ao autenticar: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    fun botaoVoltar(){
+        imgVoltar.setOnClickListener {
+            val intent = Intent(this@LoginActivity, WelcomeActivity::class.java)
+            startActivity(intent)
+        }
     }
 }

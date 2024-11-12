@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -25,9 +26,13 @@ class CadastroActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
 
+    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_cadastro)
+        setContentView(R.layout.cadastro_activity)
+
+        botaoVoltar()
 
         // Inicializa Firebase Authentication e Firestore
         auth = FirebaseAuth.getInstance()
@@ -118,4 +123,11 @@ class CadastroActivity : ComponentActivity() {
                 Toast.makeText(this, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+    fun botaoVoltar(){
+        imgVoltar.setOnClickListener {
+            val intent = Intent(this@CadastroActivity, WelcomeActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
 }

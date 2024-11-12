@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.core.content.edit
 import android.widget.Toast
@@ -13,9 +14,12 @@ class SettingsActivity : ComponentActivity() {
 
     private lateinit var coLimitInput: EditText
 
+    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        botaoVoltar()
 
         coLimitInput = findViewById(R.id.coLimitInput)
         val saveButton: Button = findViewById(R.id.saveButton)
@@ -44,6 +48,13 @@ class SettingsActivity : ComponentActivity() {
         fun start(context: Context) {
             val intent = Intent(context, SettingsActivity::class.java)
             context.startActivity(intent)
+        }
+    }
+
+    fun botaoVoltar(){
+        imgVoltar.setOnClickListener {
+            val intent = Intent(this@SettingsActivity, MainActivity::class.java)
+            startActivity(intent)
         }
     }
 }
