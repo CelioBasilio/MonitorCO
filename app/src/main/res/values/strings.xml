@@ -17,6 +17,6 @@
     <string name="settings">Configurações</string>
     <string name="define_co_alert_level">Defina o nível de alerta de CO:</string>
     <string name="co_alert_level">Nível de alerta</string>
-    <string name="host">Hospedagem</string>
+    <string name="host">Hospedagens</string>
     <string name="level_co">Nível de CO: 7</string>
 </resources>

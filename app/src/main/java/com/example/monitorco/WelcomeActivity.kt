@@ -14,12 +14,12 @@ class WelcomeActivity : ComponentActivity() {
         val btLogin: Button = findViewById(R.id.btLoginWelcome)
 
         btRegister.setOnClickListener {
-            val intent = Intent(this@WelcomeActivity, CadastroActivity::class.java)
+            val intent = Intent(this, CadastroActivity::class.java)
             startActivity(intent)
         }
 
         btLogin.setOnClickListener {
-            val intent = Intent(this@WelcomeActivity, LoginActivity::class.java)
+            val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
         }
     }

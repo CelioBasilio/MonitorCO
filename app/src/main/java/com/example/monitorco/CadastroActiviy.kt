@@ -26,13 +26,11 @@ class CadastroActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
 
-    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
+//    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.cadastro_activity)
-
-        botaoVoltar()
 
         // Inicializa Firebase Authentication e Firestore
         auth = FirebaseAuth.getInstance()
@@ -86,6 +84,8 @@ class CadastroActivity : ComponentActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish() // Finaliza a tela de cadastro
         }
+
+        //            botaoVoltar()
     }
 
     // Função para cadastrar o usuário no Firebase Authentication
@@ -131,11 +131,11 @@ class CadastroActivity : ComponentActivity() {
                 Toast.makeText(this, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-    fun botaoVoltar(){
-        imgVoltar.setOnClickListener {
-            val intent = Intent(this@CadastroActivity, WelcomeActivity::class.java)
-            startActivity(intent)
-        }
-    }
+//    fun botaoVoltar(){
+//        imgVoltar.setOnClickListener {
+//            val intent = Intent(this@CadastroActivity, WelcomeActivity::class.java)
+//            startActivity(intent)
+//        }
+//    }
 
 }

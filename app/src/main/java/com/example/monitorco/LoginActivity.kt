@@ -21,12 +21,10 @@ class LoginActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
 
-    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
+//    val imgVoltar : ImageView = findViewById(R.id.imgVoltarLogin)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        botaoVoltar()
 
         // Inicializa o Firebase
         FirebaseApp.initializeApp(this)
@@ -48,7 +46,6 @@ class LoginActivity : ComponentActivity() {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
-
         // Ação do botão de login
         loginButton.setOnClickListener {
             fazerLogin()
@@ -60,6 +57,8 @@ class LoginActivity : ComponentActivity() {
             startActivity(Intent(this, CadastroActivity::class.java))
             finish()
         }
+
+//        botaoVoltar()
     }
 
     // Função para realizar o login
@@ -106,10 +105,10 @@ class LoginActivity : ComponentActivity() {
             }
     }
 
-    fun botaoVoltar(){
-        imgVoltar.setOnClickListener {
-            val intent = Intent(this@LoginActivity, WelcomeActivity::class.java)
-            startActivity(intent)
-        }
-    }
+//    fun botaoVoltar(){
+//        imgVoltar.setOnClickListener {
+//            val intent = Intent(this@LoginActivity, WelcomeActivity::class.java)
+//            startActivity(intent)
+//        }
+//    }
 }
