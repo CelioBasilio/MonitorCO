@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MonitorCO</string>
+    <string name="app_name">Detect CO</string>
     <string name="welcome">Bem Vindo ao</string>
     <string name="new_account">Criar uma conta</string>
     <string name="login">Login</string>
