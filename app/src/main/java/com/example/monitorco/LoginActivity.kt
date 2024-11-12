@@ -23,35 +23,35 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicializa o Firebase
+        // Certifique-se de que o Firebase está inicializado
         FirebaseApp.initializeApp(this)
 
+        // Define o layout da Activity
         setContentView(R.layout.activity_login)
 
         // Inicializa Firebase Authentication
         auth = FirebaseAuth.getInstance()
 
+        // Inicializa os elementos da interface
         emailEditText = findViewById(R.id.emailEditText)
         senhaEditText = findViewById(R.id.senhaEditText)
         loginButton = findViewById(R.id.loginButton)
         cadastroLink = findViewById(R.id.cadastroLink)
 
-        // Verifica se o usuário já está autenticado ao abrir o LoginActivity
+        // Verifica se o usuário já está autenticado
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            // Usuário já está logado, redireciona para a MainActivity
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
 
-        // Ação do botão de login
+        // Configura o clique do botão de login
         loginButton.setOnClickListener {
             fazerLogin()
         }
 
-        // Ação do link para cadastro
+        // Configura o clique no link de cadastro
         cadastroLink.setOnClickListener {
-            // Navega para a tela de cadastro
             startActivity(Intent(this, CadastroActivity::class.java))
             finish()
         }
@@ -64,40 +64,41 @@ class LoginActivity : ComponentActivity() {
 
         // Verifica a conexão com a internet
         if (!isNetworkAvailable(this)) {
-            Toast.makeText(this, "Sem conexão com a Internet. Tente novamente mais tarde.", Toast.LENGTH_SHORT).show()
+            showToast("Sem conexão com a Internet. Tente novamente mais tarde.")
             return
         }
 
-        // Verifica se os campos de email e senha estão vazios
+        // Verifica se os campos estão preenchidos
         if (email.isEmpty() || senha.isEmpty()) {
-            Toast.makeText(this, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
+            showToast("Por favor, preencha todos os campos.")
             return
         }
 
-        // Faz o login utilizando Firebase Authentication
+        // Verifica o formato do email
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showToast("Email em formato incorreto.")
+            return
+        }
+
+        // Faz o login no Firebase Authentication
         auth.signInWithEmailAndPassword(email, senha)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Login bem-sucedido, salva o estado de autenticação
-                    val sharedPrefs = getSharedPreferences("MeuAppPrefs", MODE_PRIVATE)
-                    sharedPrefs.edit().apply {
-                        putBoolean("isLoggedIn", true)
-                        apply()
-                    }
-                    Toast.makeText(this, "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
-
-                    // Navega para a MainActivity após o login
+                    // Login bem-sucedido
+                    showToast("Login realizado com sucesso!")
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
                 } else {
-                    // Caso o login falhe, exibe a mensagem de erro
-                    val errorMessage = task.exception?.message ?: "Erro desconhecido"
-                    Toast.makeText(this, "Falha no login: $errorMessage", Toast.LENGTH_SHORT).show()
+                    showToast("Falha no login: ${task.exception?.message}")
                 }
             }
             .addOnFailureListener { e ->
-                // Caso ocorra um erro ao tentar autenticar, exibe a mensagem
-                Toast.makeText(this, "Erro ao autenticar: ${e.message}", Toast.LENGTH_SHORT).show()
+                showToast("Erro ao autenticar: ${e.message}")
             }
+    }
+
+    // Função auxiliar para exibir mensagens Toast
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }

@@ -2,6 +2,7 @@ package com.example.monitorco
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -9,7 +10,9 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.example.monitorco.utils.Utils.isValidCNPJ
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 
 class CadastroActivity : ComponentActivity() {
 
@@ -43,67 +46,101 @@ class CadastroActivity : ComponentActivity() {
         cadastrarButton = findViewById(R.id.cadastrarButton)
         loginLink = findViewById(R.id.loginLink)
 
-        // Ação do botão de cadastro
+        // Configura o clique no botão de cadastro
         cadastrarButton.setOnClickListener {
-            // Obtém os valores inseridos pelo usuário
-            val nome = nomeEditText.text.toString()
-            val endereco = enderecoEditText.text.toString()
-            val email = emailEditText.text.toString()
-            val senha = senhaEditText.text.toString()
-            val confirmarSenha = confirmarSenhaEditText.text.toString()
+            val nome = nomeEditText.text.toString().trim()
+            val endereco = enderecoEditText.text.toString().trim()
+            val email = emailEditText.text.toString().trim()
+            val senha = senhaEditText.text.toString().trim()
+            val confirmarSenha = confirmarSenhaEditText.text.toString().trim()
             val cnpj = cnpjEditText.text.toString().replace("[^0-9]".toRegex(), "")
 
-            // Valida se os campos estão preenchidos
-            if (nome.isEmpty() || endereco.isEmpty() || email.isEmpty() || senha.isEmpty() || cnpj.isEmpty()) {
-                Toast.makeText(this, "Preencha todos os campos corretamente!", Toast.LENGTH_SHORT).show()
+            // Validação dos campos
+            if (nome.isEmpty() || endereco.isEmpty() || email.isEmpty() || senha.isEmpty() || confirmarSenha.isEmpty() || cnpj.isEmpty()) {
+                showToast("Preencha todos os campos!")
                 return@setOnClickListener
             }
 
-            // Valida o formato do CNPJ
+            // Valida o formato do e-mail
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                showToast("Formato de e-mail incorreto")
+                return@setOnClickListener
+            }
+
+            // Valida o CNPJ
             if (!isValidCNPJ(cnpj)) {
-                Toast.makeText(this, "CNPJ inválido", Toast.LENGTH_SHORT).show()
+                showToast("CNPJ inválido")
                 return@setOnClickListener
             }
 
             // Verifica se as senhas coincidem
             if (senha != confirmarSenha) {
-                Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
+                showToast("As senhas não coincidem")
                 return@setOnClickListener
             }
 
-            // Chama a função para cadastrar o usuário
-            cadastrarUsuario(nome, endereco, email, senha, cnpj)
+            // Verifica se o CNPJ já está cadastrado no Firestore
+            verificarCNPJExistente(cnpj) { cnpjExiste ->
+                if (cnpjExiste) {
+                    showToast("CNPJ já cadastrado")
+                } else {
+                    // Inicia o cadastro do usuário
+                    cadastrarUsuario(nome, endereco, email, senha, cnpj)
+                }
+            }
         }
 
-        // Ação do link para login
+        // Configura o clique no link de login
         loginLink.setOnClickListener {
-            // Navega para a tela de login
             startActivity(Intent(this, LoginActivity::class.java))
-            finish() // Finaliza a tela de cadastro
+            finish()
         }
+    }
+
+    // Função para verificar se o CNPJ já existe no Firestore
+    private fun verificarCNPJExistente(cnpj: String, callback: (Boolean) -> Unit) {
+        firestore.collection("usuarios")
+            .whereEqualTo("cnpj", cnpj)
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val result: QuerySnapshot? = task.result
+                    callback(!result?.isEmpty!!)
+                } else {
+                    showToast("Erro ao verificar CNPJ")
+                    callback(false)
+                }
+            }
+            .addOnFailureListener {
+                showToast("Erro ao acessar o banco de dados")
+                callback(false)
+            }
     }
 
     // Função para cadastrar o usuário no Firebase Authentication
     private fun cadastrarUsuario(nome: String, endereco: String, email: String, senha: String, cnpj: String) {
-        auth.createUserWithEmailAndPassword(email, senha) // Cria o usuário com o email e senha
+        auth.createUserWithEmailAndPassword(email, senha)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Caso o cadastro seja bem-sucedido, salva os dados do usuário no Firestore
+                    // Cadastro bem-sucedido, salva os dados no Firestore
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
                     salvarDadosNoFirestore(userId, nome, endereco, email, cnpj)
                 } else {
-                    // Caso ocorra um erro, exibe uma mensagem de erro
-                    val exceptionMessage = task.exception?.message ?: "Erro desconhecido"
-                    Toast.makeText(this, "Erro ao cadastrar: $exceptionMessage", Toast.LENGTH_SHORT).show()
+                    // Tratamento para e-mail já cadastrado
+                    if (task.exception is FirebaseAuthUserCollisionException) {
+                        showToast("E-mail já cadastrado")
+                    } else {
+                        // Erro genérico (oculta mensagem em inglês)
+                        showToast("Erro ao criar conta")
+                    }
                 }
             }
-            .addOnFailureListener { e ->
-                // Exibe uma mensagem de erro caso a criação do usuário falhe
-                Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                showToast("Erro ao criar usuário")
             }
     }
 
-    // Função para salvar os dados do usuário no Firestore
+    // Função para salvar dados no Firestore
     private fun salvarDadosNoFirestore(userId: String, nome: String, endereco: String, email: String, cnpj: String) {
         val usuario = hashMapOf(
             "nome" to nome,
@@ -112,18 +149,21 @@ class CadastroActivity : ComponentActivity() {
             "cnpj" to cnpj
         )
 
-        // Salva os dados do usuário no Firestore
         firestore.collection("usuarios").document(userId)
             .set(usuario)
             .addOnSuccessListener {
-                // Exibe uma mensagem de sucesso e navega para a tela de login
-                Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_SHORT).show()
+                showToast("Cadastro realizado com sucesso!")
                 startActivity(Intent(this, LoginActivity::class.java))
-                finish() // Finaliza a tela de cadastro
+                finish()
             }
-            .addOnFailureListener { e ->
-                // Exibe uma mensagem de erro caso a gravação no Firestore falhe
-                Toast.makeText(this, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                showToast("Erro ao salvar dados")
+                auth.currentUser?.delete() // Exclui o usuário caso haja falha ao salvar
             }
+    }
+
+    // Função utilitária para exibir mensagens
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
