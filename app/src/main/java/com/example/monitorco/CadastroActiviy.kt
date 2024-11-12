@@ -38,6 +38,7 @@ class CadastroActivity : ComponentActivity() {
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
+        // Inicializa os campos da interface de usuário
         nomeEditText = findViewById(R.id.nomeEditText)
         enderecoEditText = findViewById(R.id.enderecoEditText)
         emailEditText = findViewById(R.id.emailEditText)
@@ -47,7 +48,9 @@ class CadastroActivity : ComponentActivity() {
         cadastrarButton = findViewById(R.id.cadastrarButton)
         loginLink = findViewById(R.id.loginLink)
 
+        // Ação do botão de cadastro
         cadastrarButton.setOnClickListener {
+            // Obtém os valores inseridos pelo usuário
             val nome = nomeEditText.text.toString()
             val endereco = enderecoEditText.text.toString()
             val email = emailEditText.text.toString()
@@ -55,54 +58,57 @@ class CadastroActivity : ComponentActivity() {
             val confirmarSenha = confirmarSenhaEditText.text.toString()
             val cnpj = cnpjEditText.text.toString().replace("[^0-9]".toRegex(), "")
 
-            // Validação de campos vazios
+            // Valida se os campos estão preenchidos
             if (nome.isEmpty() || endereco.isEmpty() || email.isEmpty() || senha.isEmpty() || cnpj.isEmpty()) {
                 Toast.makeText(this, "Preencha todos os campos corretamente!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Validação CNPJ
+            // Valida o formato do CNPJ
             if (!isValidCNPJ(cnpj)) {
                 Toast.makeText(this, "CNPJ inválido", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-
-            // Verificar se as senhas coincidem
+            // Verifica se as senhas coincidem
             if (senha != confirmarSenha) {
                 Toast.makeText(this, "As senhas não coincidem", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Criar o usuário
+            // Chama a função para cadastrar o usuário
             cadastrarUsuario(nome, endereco, email, senha, cnpj)
         }
 
+        // Ação do link para login
         loginLink.setOnClickListener {
             // Navega para a tela de login
             startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            finish() // Finaliza a tela de cadastro
         }
     }
 
+    // Função para cadastrar o usuário no Firebase Authentication
     private fun cadastrarUsuario(nome: String, endereco: String, email: String, senha: String, cnpj: String) {
-        // Cria o usuário com Firebase Authentication
-        auth.createUserWithEmailAndPassword(email, senha)
+        auth.createUserWithEmailAndPassword(email, senha) // Cria o usuário com o email e senha
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Usuário criado com sucesso, agora salva no Firestore
+                    // Caso o cadastro seja bem-sucedido, salva os dados do usuário no Firestore
                     val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
                     salvarDadosNoFirestore(userId, nome, endereco, email, cnpj)
                 } else {
+                    // Caso ocorra um erro, exibe uma mensagem de erro
                     val exceptionMessage = task.exception?.message ?: "Erro desconhecido"
                     Toast.makeText(this, "Erro ao cadastrar: $exceptionMessage", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener { e ->
+                // Exibe uma mensagem de erro caso a criação do usuário falhe
                 Toast.makeText(this, "Erro ao cadastrar: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
+    // Função para salvar os dados do usuário no Firestore
     private fun salvarDadosNoFirestore(userId: String, nome: String, endereco: String, email: String, cnpj: String) {
         val usuario = hashMapOf(
             "nome" to nome,
@@ -111,15 +117,17 @@ class CadastroActivity : ComponentActivity() {
             "cnpj" to cnpj
         )
 
+        // Salva os dados do usuário no Firestore
         firestore.collection("usuarios").document(userId)
             .set(usuario)
             .addOnSuccessListener {
+                // Exibe uma mensagem de sucesso e navega para a tela de login
                 Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_SHORT).show()
-                // Ao cadastrar, já navega para o LoginActivity
                 startActivity(Intent(this, LoginActivity::class.java))
-                finish()
+                finish() // Finaliza a tela de cadastro
             }
             .addOnFailureListener { e ->
+                // Exibe uma mensagem de erro caso a gravação no Firestore falhe
                 Toast.makeText(this, "Erro ao salvar dados: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }

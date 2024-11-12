@@ -49,10 +49,12 @@ class LoginActivity : ComponentActivity() {
             finish()
         }
 
+        // Ação do botão de login
         loginButton.setOnClickListener {
             fazerLogin()
         }
 
+        // Ação do link para cadastro
         cadastroLink.setOnClickListener {
             // Navega para a tela de cadastro
             startActivity(Intent(this, CadastroActivity::class.java))
@@ -60,6 +62,7 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
+    // Função para realizar o login
     private fun fazerLogin() {
         val email = emailEditText.text.toString().trim()
         val senha = senhaEditText.text.toString().trim()
@@ -70,13 +73,13 @@ class LoginActivity : ComponentActivity() {
             return
         }
 
-        // Verifica se os campos estão vazios
+        // Verifica se os campos de email e senha estão vazios
         if (email.isEmpty() || senha.isEmpty()) {
             Toast.makeText(this, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Faz o login usando Firebase Authentication
+        // Faz o login utilizando Firebase Authentication
         auth.signInWithEmailAndPassword(email, senha)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
