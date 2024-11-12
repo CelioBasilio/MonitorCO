@@ -11,18 +11,21 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.monitorco.R
 import com.example.monitorco.adapters.CardAdapter
+import com.example.monitorco.databinding.ActivityManageCardsBinding
 import com.example.monitorco.managers.CardManager
 import com.example.monitorco.models.Card
 
 class ManageCardsActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityManageCardsBinding
     private lateinit var cardManager: CardManager
     private lateinit var cardAdapter: CardAdapter
     private var userId: String = "" // ID do usuário logado
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_manage_cards)
+        binding = ActivityManageCardsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         cardManager = CardManager()
         userId = intent.getStringExtra("USER_ID") ?: ""
@@ -33,12 +36,10 @@ class ManageCardsActivity : AppCompatActivity() {
             return
         }
 
-
-
         // Botão para salvar um novo card
-        findViewById<Button>(R.id.btnSaveCard).setOnClickListener {
-            val cardName = findViewById<EditText>(R.id.edtCardName).text.toString()
-            val hospedagemNumero = findViewById<EditText>(R.id.edtHospedagemNumero).text.toString()
+        binding.btnSaveCard.setOnClickListener {
+            val cardName = binding.edtCardName.text.toString()
+            val hospedagemNumero = binding.edtHospedagemNumero.text.toString()
             if (cardName.isNotEmpty() && hospedagemNumero.isNotEmpty()) {
                 saveNewCard(cardName, hospedagemNumero)
             } else {
@@ -49,8 +50,6 @@ class ManageCardsActivity : AppCompatActivity() {
         // Carregar cards existentes
         loadCards()
     }
-
-
 
     private fun loadCards() {
         cardManager.getCardsByUserId(userId) { cards ->
@@ -66,7 +65,7 @@ class ManageCardsActivity : AppCompatActivity() {
         val newCardId = generateNewCardId()
 
         val newCard = Card(
-            id = "", // O ID será gerado automaticamente ao salvar o card no banco
+            id = "",
             cardId = newCardId,
             userId = userId,
             hospedagemNumero = hospedagemNumero,
@@ -79,7 +78,7 @@ class ManageCardsActivity : AppCompatActivity() {
             if (success) {
                 Toast.makeText(this, "Card salvo com sucesso!", Toast.LENGTH_SHORT).show()
                 val topic = "pousada/$newCardId/status"
-                findViewById<TextView>(R.id.txtCardInfo).text = "Tópico MQTT: $topic"
+                binding.txtCardInfo.text = "Tópico MQTT: $topic"
                 loadCards()
             } else {
                 Toast.makeText(this, "Erro ao salvar card", Toast.LENGTH_SHORT).show()
