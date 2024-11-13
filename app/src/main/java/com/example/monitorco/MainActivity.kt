@@ -197,7 +197,7 @@ class MainActivity : ComponentActivity() {
         val currentTime = System.currentTimeMillis()
         val hospedagem = adapter.hospedagens[index]
 
-        if (value > 5) {
+        if (value > 15) {
             if (!hospedagem.isAlertActive && currentTime > alertCooldownTime) {
                 hospedagem.isAlertActive = true
                 isAlertActive = true
@@ -248,7 +248,6 @@ class SpacingItemDecoration(private val spacing: Int) : RecyclerView.ItemDecorat
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         outRect.left = spacing
         outRect.right = spacing
-        outRect.top = spacing
         outRect.bottom = spacing
     }
 }

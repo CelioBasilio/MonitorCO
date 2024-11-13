@@ -46,16 +46,16 @@ class HospedagemAdapter(
         return ViewHolder(view)
     }
 
-    // Configura os dados para cada item na lista
+    // Atualiza o ícone da janela com base no valor do CO
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val hospedagem = hospedagens[position] // Obtemos a hospedagem para esse índice
+        val hospedagem = hospedagens[position]
 
         // Define o rótulo e o valor do manômetro (representando o nível de CO)
         holder.label.text = hospedagem.label
         holder.manometer.updateValue(hospedagem.value)
 
-        // Atualiza o ícone da janela com base no valor do CO
-        if (hospedagem.value > 5) {
+        // Controle da janela (abertura e fechamento)
+        if (hospedagem.value > 10 && (hospedagem.isAlertActive)) {
             holder.janelaIcon.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_window_open))
             startColorAnimation(holder.itemView) // Inicia animação de alerta se CO estiver alto
         } else {
@@ -63,8 +63,8 @@ class HospedagemAdapter(
             stopColorAnimation(holder.itemView) // Para animação se CO estiver seguro
         }
 
-        // Controla a visibilidade do botão de alerta com base no estado do alerta individual
-        holder.alertButton.visibility = if (hospedagem.isAlertActive) View.VISIBLE else View.GONE
+        // Visibilidade do botão de alerta
+        holder.alertButton.visibility = if (hospedagem.value > 15) View.VISIBLE else View.GONE
 
         // Clica no botão de alerta para desativar o alerta
         holder.alertButton.setOnClickListener {

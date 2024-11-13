@@ -15,7 +15,6 @@
             android:id="@+id/imgVoltar"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/back_icon"
             android:layout_gravity="start"
             android:layout_marginTop="32dp"
             android:layout_marginEnd="16dp"/>
