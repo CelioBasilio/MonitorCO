@@ -12,4 +12,5 @@
     <color name="red">#FF0000</color>
     <color name="logo">#bcbbb7</color>
     <color name="escrita">#182123</color>
+    <color name="gray">#808080</color>
 </resources>
