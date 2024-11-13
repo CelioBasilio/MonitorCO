@@ -1,22 +1,32 @@
 package com.example.monitorco
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import androidx.activity.ComponentActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.FirebaseApp
 
-class Splash : Activity() {
-    private val SPLASH_TIME_OUT = 3000L
+class Splash : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.splash)
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this@Splash, WelcomeActivity::class.java)
-            startActivity(intent)
-            finish()
-        }, SPLASH_TIME_OUT)
+        // Inicializa o Firebase
+        FirebaseApp.initializeApp(this)
+
+        // Verifica se o usuário está autenticado
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        // Redireciona para a tela apropriada com base no estado de autenticação
+        if (currentUser != null) {
+            // Se o usuário já estiver autenticado, redireciona para a MainActivity
+            startActivity(Intent(this, MainActivity::class.java))
+        } else {
+            // Caso contrário, redireciona para a LoginActivity
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
+
+        // Finaliza a SplashActivity para que não fique na pilha
+        finish()
     }
 }

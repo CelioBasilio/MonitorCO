@@ -1,0 +1,184 @@
+// ================================
+//  Bibliotecas Necessárias
+// ================================
+#include <WiFi.h>               // Biblioteca para conexão Wi-Fi
+#include <Wire.h>               // Biblioteca para comunicação I2C
+#include <Adafruit_GFX.h>       // Biblioteca para gráficos no display
+#include <Adafruit_SSD1306.h>   // Biblioteca para displays OLED SSD1306
+#include <ESP32Servo.h>         // Biblioteca para controle de servos com ESP32
+
+// ================================
+//  Definições de Configuração
+// ================================
+#define SCREEN_WIDTH 128        // Largura do display OLED (pixels)
+#define SCREEN_HEIGHT 64        // Altura do display OLED (pixels)
+#define OLED_RESET -1           // Pino de reset do display (não utilizado)
+
+// ================================
+//  Configurações de Rede e Servidor
+// ================================
+const char* ssid = "Andromeda";          // Nome da rede Wi-Fi
+const char* password = "Estutrampo";     // Senha da rede Wi-Fi
+const char* api_key = "LDIM8WKBH4DKTPWG"; // Chave da API do ThingSpeak
+const char* server = "api.thingspeak.com"; // Servidor do ThingSpeak
+WiFiClient client;                      // Objeto para conexão ao servidor
+
+// ================================
+//  Configuração do Display OLED
+// ================================
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// ================================
+//  Definição de Pinos e Constantes
+// ================================
+const int MQ7_PIN = 34;        // Pino de leitura do sensor de CO
+const int BUZZER_PIN = 26;     // Pino de controle do buzzer
+const int SERVO_PIN = 27;      // Pino de controle do servo motor
+
+const float VCC = 3.0;         // Tensão de operação do ESP32 (volts)
+const float RL = 10.0;         // Resistência de carga em kOhms
+const float RO = 10.0;         // Resistência de referência do sensor de CO
+
+// ================================
+//  Variáveis Globais
+// ================================
+Servo myServo;
+bool alarmeAtivado = false;    // Indica se o alarme foi ativado
+
+// ================================
+//  Funções Auxiliares
+// ================================
+
+// Função para ler a tensão do sensor
+float readVoltage(int pin) {
+  int adcValue = analogRead(pin);
+  float voltage = (adcValue / 4095.0) * VCC * 1000; // Converte para milivolts
+  return voltage;
+}
+
+// Função para calcular a resistência do sensor
+float calculateResistance(float voltage) {
+  return ((VCC * 1000) / voltage - 1) * RL;
+}
+
+// Função para calcular o nível de CO em ppm
+float calculatePPM(float resistance) {
+  float ratio = resistance / RO;
+  return pow((ratio / 27.0), -1.5); // Fórmula empírica para ppm
+}
+
+// ================================
+//  Função para Enviar Dados ao ThingSpeak
+// ================================
+void enviarThingSpeak(float valorSensor) {
+  if (client.connect(server, 80)) {
+    String postStr = "api_key=" + String(api_key) + "&field1=" + String(valorSensor, 2);
+
+    client.print("POST /update HTTP/1.1\n");
+    client.print("Host: " + String(server) + "\n");
+    client.print("Connection: close\n");
+    client.print("Content-Type: application/x-www-form-urlencoded\n");
+    client.print("Content-Length: " + String(postStr.length()) + "\n\n");
+    client.print(postStr);
+
+    Serial.println("Dados enviados para ThingSpeak");
+    delay(1000); // Aguarda 1 segundos antes do próximo envio
+    client.stop();
+  } else {
+    Serial.println("Falha ao conectar ao ThingSpeak");
+  }
+}
+
+// ================================
+//  Função de Inicialização
+// ================================
+void setup() {
+  Serial.begin(115200);
+
+  // Conectar ao Wi-Fi
+  Serial.print("Conectando ao Wi-Fi...");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("\nConectado!");
+
+  // Configurar pinos
+  pinMode(MQ7_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  myServo.attach(SERVO_PIN);
+  myServo.write(0); // Janela fechada
+
+  // Inicializar o display OLED
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("Falha ao inicializar o display OLED"));
+    while (true);
+  }
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print("Iniciando...");
+  display.display();
+  delay(2000);
+}
+
+// ================================
+//  Função Principal (Loop)
+// ================================
+void loop() {
+  // Ler dados do sensor
+  float voltage = readVoltage(MQ7_PIN);
+  float resistance = calculateResistance(voltage);
+  float ppm = calculatePPM(resistance);
+
+  // Exibir dados no console
+  Serial.print("Tensão (mV): ");
+  Serial.print(voltage);
+  Serial.print(" | Resistência (kOhms): ");
+  Serial.print(resistance);
+  Serial.print(" | CO (ppm): ");
+  Serial.println(ppm);
+
+  // Atualizar display OLED
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("CO:");
+  display.print(ppm);
+  display.print("ppm");
+  display.setCursor(0, 40);
+
+  // Lógica de controle do alarme e janela
+  if (ppm < 5) {
+    display.print("Normal");
+    if (!alarmeAtivado) {
+      digitalWrite(BUZZER_PIN, LOW);
+      myServo.write(0); // Janela fechada
+    }
+  } else if (ppm >= 5 && ppm < 8) {
+    display.print("Alerta");
+  } else if (ppm >= 8) {
+    display.print("PERIGO!");
+    digitalWrite(BUZZER_PIN, HIGH);
+    myServo.write(120); // Abre a janela
+    alarmeAtivado = true;
+  }
+
+  // Resetar alarme se o nível de CO for seguro
+  if (ppm < 2 && alarmeAtivado) {
+    alarmeAtivado = false;
+    digitalWrite(BUZZER_PIN, LOW);
+    myServo.write(0);
+  }
+
+  display.display();
+  delay(1000); // Aguardar 1 segundo antes de nova leitura
+
+  // Enviar dados para ThingSpeak
+  if (WiFi.status() == WL_CONNECTED) {
+    enviarThingSpeak(ppm);
+  } else {
+    Serial.println("Conexão Wi-Fi perdida");
+  }
+}

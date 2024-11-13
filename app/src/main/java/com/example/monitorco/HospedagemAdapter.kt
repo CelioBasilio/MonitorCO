@@ -82,7 +82,7 @@ class HospedagemAdapter(
 
         // Cria e inicia a animação de cor
         val animator = ObjectAnimator.ofArgb(view, "backgroundColor", colorFrom, colorTo).apply {
-            duration = 1000 // Duração da animação (1 segundo)
+            duration = 3000 // Duração da animação (3 segundo)
             repeatMode = ObjectAnimator.REVERSE // Faz a animação reverter
             repeatCount = ObjectAnimator.INFINITE // Repete a animação infinitamente
             interpolator = AccelerateDecelerateInterpolator() // Interpolação suave
