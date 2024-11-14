@@ -64,7 +64,7 @@ class HospedagemAdapter(
         }
 
         // Visibilidade do botão de alerta
-        holder.alertButton.visibility = if (hospedagem.value > 15) View.VISIBLE else View.GONE
+        holder.alertButton.visibility = if (hospedagem.value > 10) View.VISIBLE else View.GONE
 
         // Clica no botão de alerta para desativar o alerta
         holder.alertButton.setOnClickListener {

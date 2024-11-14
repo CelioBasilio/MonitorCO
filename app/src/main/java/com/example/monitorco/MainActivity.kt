@@ -197,7 +197,7 @@ class MainActivity : ComponentActivity() {
         val currentTime = System.currentTimeMillis()
         val hospedagem = adapter.hospedagens[index]
 
-        if (value > 15) {
+        if (value > 10) {
             if (!hospedagem.isAlertActive && currentTime > alertCooldownTime) {
                 hospedagem.isAlertActive = true
                 isAlertActive = true
