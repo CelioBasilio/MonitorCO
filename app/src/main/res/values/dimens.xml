@@ -1,0 +1,5 @@
+<!-- dimens.xml -->
+<resources>
+    <!-- Espaçamento entre itens do RecyclerView -->
+    <dimen name="item_spacing">10dp</dimen>
+</resources>

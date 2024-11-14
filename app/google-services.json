@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "990350331339",
+    "project_id": "bd-monitorco",
+    "storage_bucket": "bd-monitorco.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990350331339:android:0097f0709792e229ca7a4e",
+        "android_client_info": {
+          "package_name": "com.example.monitorco"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiegqlgw3Zo_84l6O4EYKqDQ8b6KdOq5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
