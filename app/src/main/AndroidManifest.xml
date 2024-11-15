@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.monitorco">
 
+    <!-- Permissões necessárias para acessar a internet e o estado da rede -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -20,6 +21,12 @@
         android:theme="@style/Theme.MonitorCO"
         tools:targetApi="31">
 
+        <!-- Registra o Serviço MQTT -->
+        <service android:name="org.eclipse.paho.android.service.MqttService"
+            android:enabled="true"
+            android:exported="false"/>
+
+        <!-- Atividade de Splash (Tela de Introdução) -->
         <activity
             android:name="Splash"
             android:exported="true"
@@ -27,16 +34,17 @@
             android:theme="@style/Theme.MonitorCO">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- MainActivity -->
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">
         </activity>
 
+        <!-- Outras atividades -->
         <activity
             android:name="LoginActivity"
             android:label="@string/app_name">

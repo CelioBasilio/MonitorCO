@@ -1,6 +1,7 @@
 package com.example.monitorco
 
 import android.animation.ValueAnimator
+import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -13,11 +14,12 @@ import kotlin.math.sin
 
 class ManometerView @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
+    maxValue: Int = 35 // Agora o valor máximo pode ser configurado
 ) : View(context, attrs) {
 
-    private var currentValue = 0f // Valor atual que a agulha vai apontar
-    private val totalValue = 35f // Valor máximo da escala (total do manômetro)
+    private var currentValue = 0 // Valor atual que a agulha vai apontar
+    private val totalValue = maxValue // Valor máximo da escala (total do manômetro)
 
     private val paint = Paint().apply {
         style = Paint.Style.STROKE
@@ -41,6 +43,7 @@ class ManometerView @JvmOverloads constructor(
     }
 
     private lateinit var arcBounds: RectF // Área do arco
+    private var isAnimating = false // Controle de animações
 
     // Calcula o tamanho e define os limites do arco
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -55,9 +58,9 @@ class ManometerView @JvmOverloads constructor(
         super.onDraw(canvas)
 
         // Desenha as faixas coloridas
-        drawColorArc(canvas, 0f, 10f, Color.GREEN)
-        drawColorArc(canvas, 10f, 15f, Color.YELLOW)
-        drawColorArc(canvas, 15f, 35f, Color.RED)
+        drawColorArc(canvas, 0, 10, Color.GREEN)
+        drawColorArc(canvas, 10, 15, Color.YELLOW)
+        drawColorArc(canvas, 15, totalValue, Color.RED)
 
         // Desenha as marcações
         drawMarkings(canvas)
@@ -70,9 +73,9 @@ class ManometerView @JvmOverloads constructor(
     }
 
     // Desenha os arcos coloridos para diferentes faixas de valor
-    private fun drawColorArc(canvas: Canvas, start: Float, end: Float, color: Int) {
-        val startAngle = 180f + (start / totalValue * 180f)
-        val sweepAngle = (end - start) / totalValue * 180f
+    private fun drawColorArc(canvas: Canvas, start: Int, end: Int, color: Int) {
+        val startAngle = 180f + (start / totalValue.toFloat() * 180f)
+        val sweepAngle = (end - start) / totalValue.toFloat() * 180f
 
         paint.color = color
         canvas.drawArc(arcBounds, startAngle, sweepAngle, false, paint)
@@ -80,7 +83,7 @@ class ManometerView @JvmOverloads constructor(
 
     // Desenha a agulha do manômetro com base no valor atual
     private fun drawNeedle(canvas: Canvas) {
-        val angle = 180f + (currentValue / totalValue * 180f)
+        val angle = 180f + (currentValue / totalValue.toFloat() * 180f)
         val radian = Math.toRadians(angle.toDouble()).toFloat()
 
         val needleLength = 60f // Comprimento da parte visível da agulha
@@ -102,12 +105,12 @@ class ManometerView @JvmOverloads constructor(
 
     // Desenha as marcações do manômetro
     private fun drawMarkings(canvas: Canvas) {
-        val step = 5f // Passo entre as marcações
+        val step = 5 // Passo entre as marcações
         val totalSteps = (totalValue / step).toInt()
 
         for (i in 0..totalSteps) {
             val value = i * step
-            val angle = 180f + (value / totalValue * 180f)
+            val angle = 180f + (value / totalValue.toFloat() * 180f)
             val radian = Math.toRadians(angle.toDouble()).toFloat()
 
             val startX = (width / 2 + cos(radian.toDouble()) * (arcBounds.width() / 2 + 10)).toFloat()
@@ -122,7 +125,7 @@ class ManometerView @JvmOverloads constructor(
 
     // Desenha o valor atual no centro do manômetro
     private fun drawValue(canvas: Canvas) {
-        val valueText = currentValue.toInt().toString() // Converte o valor atual para String
+        val valueText = currentValue.toString() // Converte o valor atual para String
         val circleRadius = 70f // Raio do círculo
         val centerX = width / 2
         val centerY = height / 2
@@ -150,23 +153,13 @@ class ManometerView @JvmOverloads constructor(
         canvas.drawCircle(centerX.toFloat(), centerY.toFloat(), circleRadius, borderPaint)
 
         // Desenha o texto sobre o círculo
-        canvas.drawText(valueText, centerX.toFloat(), centerY + textPaint.textSize / 3, textPaint)
+        canvas.drawText(valueText, centerX.toFloat(), centerY - (textPaint.descent() + textPaint.ascent()) / 2, textPaint)
     }
 
     // Atualiza o valor do manômetro
-    fun updateValue(value: Float) {
-        currentValue = value.coerceIn(0f, totalValue) // Garante que o valor está dentro do intervalo
+    fun updateValue(value: Int) {
+        currentValue = value.coerceIn(0, totalValue) // Garante que o valor está dentro do intervalo
         invalidate() // Atualiza a visualização
     }
 
-    // Anima a mudança do valor do manômetro de um valor para outro
-    fun animateValue(from: Float, to: Float) {
-        val animator = ValueAnimator.ofFloat(from, to)
-        animator.duration = 1000 // Duração da animação em milissegundos
-        animator.addUpdateListener { valueAnimator ->
-            val animatedValue = valueAnimator.animatedValue as Float
-            updateValue(animatedValue)
-        }
-        animator.start()
-    }
 }

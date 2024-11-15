@@ -1,253 +1,163 @@
 package com.example.monitorco
 
-import android.graphics.Rect
-import android.graphics.drawable.Drawable
-import android.media.MediaPlayer
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.core.content.ContextCompat
+import androidx.activity.viewModels
+import androidx.core.app.NotificationCompat
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.monitorco.models.Hospedagem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.FirebaseApp
-import android.content.Intent
-import android.view.View
-import com.example.monitorco.models.Hospedagem
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : ComponentActivity() {
 
-    // Variáveis relacionadas ao RecyclerView e ao adapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: HospedagemAdapter
-    private var mediaPlayer: MediaPlayer? = null
-    var isAlertActive: Boolean = false // Indica se o alerta está ativo ou não
+    private lateinit var mqttClientService: MqttClientService
+    private lateinit var alertManager: AlertManager
+    private var isAlertActive = false
 
-    // Configurações de intervalo e controle de atualização
-    private val updateInterval = 5000L // Intervalo de atualização (5 segundos)
-    private val handler = Handler(Looper.getMainLooper()) // Usa o Looper da thread principal
-    private var updateRunnable: Runnable? = null // Runnable para atualização periódica
-    private var alertCooldownTime: Long = 0 // Armazena o tempo em que o alerta foi desativado
-    private val cooldownDuration = 5 * 60 * 1000L // Duração do cooldown em milissegundos (5 minutos)
+    private val channelId = "CO_ALERT_CHANNEL"
 
-    // Variáveis relacionadas ao salvamento no banco de dados
-    private var isSavingToDatabase: Boolean = false
-    private val saveInterval = 2 * 60 * 1000L // Intervalo de 2 minutos em milissegundos
-    private var saveHandler: Handler? = null
-    private var saveRunnable: Runnable? = null
+    // ViewModel para gerenciar os dados de CO
+    private val viewModel: MqttViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Inicializa o Firebase
         FirebaseApp.initializeApp(this)
 
-        // Verifica se o usuário está autenticado no Firebase
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user == null) {
-            // Se não estiver autenticado, redireciona para a tela de login
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish() // Finaliza MainActivity para que não fique na pilha
-            return
+        // Verificar se o usuário está logado
+        if (isUserLoggedIn()) {
+            setupUI()
+            setupMqtt()
+            observeCOValue()
+        } else {
+            navigateToLogin()
         }
-
-        setContentView(R.layout.activity_main)
-
-        initializeUI()  // Configura o RecyclerView e o adapter
-        startMonitoring() // Inicia o monitoramento contínuo dos sensores
     }
 
-    private fun initializeUI() {
-        // Inicializa o RecyclerView
+    // Verifica se o usuário está logado
+    private fun isUserLoggedIn(): Boolean {
+        return FirebaseAuth.getInstance().currentUser != null
+    }
+
+    // Navega para a tela de login se o usuário não estiver logado
+    private fun navigateToLogin() {
+        val loginIntent = Intent(this, LoginActivity::class.java)
+        startActivity(loginIntent)
+        finish()
+    }
+
+    // Configura a UI, RecyclerView, Adapter e outros componentes
+    private fun setupUI() {
+        setContentView(R.layout.activity_main)
+
+        alertManager = AlertManager(this)
+        mqttClientService = MqttClientService(this, viewModel)
+
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Adiciona espaçamento entre os itens
-        val spacingInPixels = resources.getDimensionPixelSize(R.dimen.item_spacing)
-        recyclerView.addItemDecoration(SpacingItemDecoration(spacingInPixels))
-
-        // Carrega o ícone de janela fechada
-        val icon = ContextCompat.getDrawable(this, R.drawable.ic_window_closed)
-            ?: throw IllegalArgumentException("Ícone não encontrado!")
-
-        // Inicializa a lista de hospedagens com dados fictícios
+        // Usando mutableListOf() para garantir que a lista seja mutável
         val hospedagensIniciais = mutableListOf(
-            Hospedagem("Hospedagem TESTE Nº 01", 0.0f, icon),
-            Hospedagem("Hospedagem MAQUETE Nº 02", 0.0f, icon)
+            Hospedagem("Hospedagem Nº 01", 0, null) // Aqui você cria uma lista mutável
         )
 
-        // Configura o adapter com as hospedagens iniciais
-        adapter = HospedagemAdapter(this, hospedagensIniciais)
+        // Passa a lista mutável para o Adapter
+        adapter = HospedagemAdapter(this, hospedagensIniciais, alertManager)
         recyclerView.adapter = adapter
+
+        createNotificationChannel()  // Criar canal de notificação
     }
 
-    private fun startMonitoring() {
-        updateRunnable = object : Runnable {
-            override fun run() {
-                updateHospedagens() // Atualiza os dados de CO periodicamente
-                handler.postDelayed(this, updateInterval) // Reagenda o Runnable para execução periódica
-            }
-        }
-        updateRunnable?.let { handler.post(it) } // Inicia o monitoramento
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        updateRunnable?.let { handler.removeCallbacks(it) } // Para o monitoramento
-        stopAlert() // Para o alerta
-        mediaPlayer?.release() // Libera o MediaPlayer
-    }
-
-    private fun updateHospedagens() {
-        CoroutineScope(Dispatchers.Main).launch {
-            val urlHardware_1 = "https://api.thingspeak.com/channels/2704097/feeds.json?results=1"
-            val resultcCO_1 = withContext(Dispatchers.IO) { makeApiRequest(urlHardware_1) }
-
-            val urlHardware_2 = "https://api.thingspeak.com/channels/2720761/feeds.json?results=1"
-            val resultcCO_2 = withContext(Dispatchers.IO) { makeApiRequest(urlHardware_2) }
-
-            adapter.updateHospedagem(0, resultcCO_1)
-            adapter.updateHospedagem(1, resultcCO_2)
-
-            checkCOLevels(resultcCO_1, "Hospedagem 1", 0)
-            checkCOLevels(resultcCO_2, "Hospedagem 2", 1)
-        }
-    }
-
-    private fun saveEventToDatabase(cardLabel: String, coLevel: Float, alertState: Boolean) {
-        val firestore = FirebaseFirestore.getInstance()
-        val eventData = hashMapOf(
-            "timestamp" to System.currentTimeMillis(),
-            "date" to java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                .format(System.currentTimeMillis()),
-            "cardLabel" to cardLabel,
-            "coLevel" to coLevel,
-            "alertState" to alertState
-        )
-
-        firestore.collection("alerts")
-            .add(eventData)
-            .addOnSuccessListener { println("Evento salvo com sucesso!") }
-            .addOnFailureListener { e -> println("Erro ao salvar evento: ${e.message}") }
-    }
-
-    private fun startSavingEvents(cardLabel: String, coLevel: Float) {
-        if (isSavingToDatabase) return
-
-        isSavingToDatabase = true
-        saveHandler = Handler(Looper.getMainLooper())
-
-        saveRunnable = object : Runnable {
-            override fun run() {
-                saveEventToDatabase(cardLabel, coLevel, isAlertActive)
-                saveHandler?.postDelayed(this, saveInterval)
-            }
-        }
-        saveRunnable?.let { saveHandler?.post(it) }
-    }
-
-    private fun stopSavingEvents() {
-        if (!isSavingToDatabase) return
-
-        isSavingToDatabase = false
-        saveRunnable?.let { saveHandler?.removeCallbacks(it) }
-        saveHandler = null
-    }
-
-    private fun startAlert() {
-        try {
-            mediaPlayer?.release()
-            mediaPlayer = MediaPlayer.create(this, R.raw.alert_sound)?.apply {
-                isLooping = true
-                start()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Erro ao iniciar o alerta", Toast.LENGTH_SHORT).show()
-        }
-        adapter.notifyDataSetChanged()
-    }
-
-    fun stopAlert(hospedagemIndex: Int? = null) {
-        if (!isAlertActive) return
-        isAlertActive = false
-        alertCooldownTime = System.currentTimeMillis() + cooldownDuration
-
-        if (hospedagemIndex != null && hospedagemIndex in adapter.hospedagens.indices) {
-            adapter.hospedagens[hospedagemIndex].isAlertActive = false
-            adapter.notifyItemChanged(hospedagemIndex)
-        }
-
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
-    }
-
-    private fun checkCOLevels(value: Float, label: String, index: Int) {
-        val currentTime = System.currentTimeMillis()
-        val hospedagem = adapter.hospedagens[index]
-
-        if (value > 10) {
-            if (!hospedagem.isAlertActive && currentTime > alertCooldownTime) {
-                hospedagem.isAlertActive = true
-                isAlertActive = true
-                Toast.makeText(this, "Alerta! Alto nível de CO detectado em $label", Toast.LENGTH_SHORT).show()
-                startAlert()
-                startSavingEvents(label, value)
-            }
-        } else {
-            if (hospedagem.isAlertActive) {
-                hospedagem.isAlertActive = false
-                stopAlert(index)
-                stopSavingEvents()
-            }
-        }
-        adapter.notifyItemChanged(index)
-    }
-
-    private suspend fun makeApiRequest(url: String): Float {
-        return try {
-            val client = OkHttpClient()
-            val request = Request.Builder().url(url).build()
-
-            val response = client.newCall(request).execute()
-            val responseData = response.body?.string()
-
-            if (response.isSuccessful && responseData != null) {
-                val field1Value = extractField1FromJson(responseData)
-                field1Value.toFloatOrNull() ?: 0.0f
+    // Configura o cliente MQTT
+    private fun setupMqtt() {
+        mqttClientService.connect {
+            if (mqttClientService.isConnected()) {
+                mqttClientService.subscribe("pousada/0001/status")
             } else {
-                0.0f
+                showNotification("Falha na conexão MQTT. Tente novamente.")
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            0.0f
         }
     }
 
-    private fun extractField1FromJson(jsonData: String): String {
-        return jsonData
-            .substringAfter("\"feeds\":[{")
-            .substringAfter("\"field1\":\"")
-            .substringBefore("\"")
+    // Observa as atualizações do valor de CO no ViewModel
+    private fun observeCOValue() {
+        viewModel.coValue.observe(this, Observer { coValue ->
+            updateCOValue(coValue)
+        })
     }
-}
 
-// Classe para espaçamento entre os itens do RecyclerView
-class SpacingItemDecoration(private val spacing: Int) : RecyclerView.ItemDecoration() {
-    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-        outRect.left = spacing
-        outRect.right = spacing
-        outRect.bottom = spacing
+    // Atualiza o valor de CO na lista de hospedagens
+    private fun updateCOValue(coValue: Int) {
+        val hospedagem = adapter.hospedagens[0]  // Alterar para a primeira hospedagem
+        hospedagem.value = coValue  // Atualiza o valor de CO
+        adapter.notifyItemChanged(0)  // Notifica o adapter sobre a mudança
+
+        showNotification("Novo valor de CO: $coValue")  // Exibe notificação
+        checkCOLevels(coValue)  // Verifica níveis de CO
+    }
+
+    // Verifica se o nível de CO ultrapassou o limite e ativa/desativa o alerta
+    private fun checkCOLevels(value: Int) {
+        if (value > 10 && !isAlertActive) {
+            isAlertActive = true
+            alertManager.startAlert()
+        } else if (value <= 10 && isAlertActive) {
+            isAlertActive = false
+            alertManager.stopAlert()
+        }
+    }
+
+    // Criação do canal de notificação para Android O e versões superiores
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "CO Alert Channel"
+            val descriptionText = "Canal para alertas de CO"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(channelId, name, importance).apply {
+                description = descriptionText
+            }
+
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    // Método para exibir a notificação
+    @SuppressLint("NotificationPermission")
+    private fun showNotification(message: String) {
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Novo valor de CO")
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(1, notification)
+    }
+
+    // Exibe uma mensagem de erro em forma de Toast
+    fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    // Exibe uma mensagem de erro em forma de Snackbar
+    private fun showSnackbar(message: String) {
+        val rootView = findViewById<View>(android.R.id.content)
+        Snackbar.make(rootView, message, Snackbar.LENGTH_LONG).show()
     }
 }
