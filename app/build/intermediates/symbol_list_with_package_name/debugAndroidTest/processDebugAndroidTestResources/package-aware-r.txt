@@ -1,0 +1,3 @@
+com.example.azevedo.test
+style WhiteBackgroundDialogTheme
+style WhiteBackgroundTheme

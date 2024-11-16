@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#FFFFFF</color>
+    <color name="error">#B00020</color>
+    <color name="on_background">#000000</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_secondary">#000000</color>
+    <color name="on_surface">#000000</color>
+    <color name="primary">#6200EE</color>
+    <color name="primary_variant">#3700B3</color>
+    <color name="secondary">#03DAC6</color>
+    <color name="secondary_variant">#018786</color>
+    <color name="surface">#FFFFFF</color>
+    <string name="app_name">azevedo</string>
+    <string name="gcm_defaultSenderId" translatable="false">990350025707</string>
+    <string name="google_api_key" translatable="false">AIzaSyBpbDs0zuhGVPT-0tctElCYmzNEwEev1PM</string>
+    <string name="google_app_id" translatable="false">1:990350025707:android:52a469e485f76f08fb6fae</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBpbDs0zuhGVPT-0tctElCYmzNEwEev1PM</string>
+    <string name="google_storage_bucket" translatable="false">tccdecteco.firebasestorage.app</string>
+    <string name="project_id" translatable="false">tccdecteco</string>
+    <style name="Base.Theme.Azevedo" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        
+    </style>
+    <style name="Theme.Azevedo" parent="Base.Theme.Azevedo"/>
+</resources>

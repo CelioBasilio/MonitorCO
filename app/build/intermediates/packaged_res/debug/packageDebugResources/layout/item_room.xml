@@ -1,0 +1,43 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:layout_margin="8dp"
+    android:background="@drawable/card_background">
+
+    <!-- Nome da sala -->
+    <TextView
+        android:id="@+id/roomNameTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nome da Sala"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingBottom="4dp" />
+
+    <!-- Tópico da sala -->
+    <TextView
+        android:id="@+id/roomTopicTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tópico"
+        android:textSize="14sp"
+        android:paddingBottom="4dp" />
+
+    <!-- Status -->
+    <TextView
+        android:id="@+id/roomStatusTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Status"
+        android:textSize="14sp"
+        android:paddingBottom="8dp" />
+
+    <!-- ManometerView -->
+    <com.example.monitorco.ManometerView
+        android:id="@+id/manometer_view"
+        android:layout_width="200dp"
+        android:layout_height="200dp" />
+</LinearLayout>

@@ -1,0 +1,6 @@
+com.example.azevedo.test.app-core-1.6.1-0 C:\Users\L44Z\.gradle\caches\8.9\transforms\6c048e40f412c4511eb32a4718ff9e7e\transformed\core-1.6.1\res
+com.example.azevedo.test.app-tracing-1.2.0-1 C:\Users\L44Z\.gradle\caches\8.9\transforms\aca5ee1784aacf3ff4834b1032060ffe\transformed\tracing-1.2.0\res
+com.example.azevedo.test.app-androidTest-2 C:\Users\L44Z\AndroidStudioProjects\azevedo\app\build\generated\res\resValues\androidTest\debug
+com.example.azevedo.test.app-mergeDebugAndroidTestResources-3 C:\Users\L44Z\AndroidStudioProjects\azevedo\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.example.azevedo.test.app-mergeDebugAndroidTestResources-4 C:\Users\L44Z\AndroidStudioProjects\azevedo\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.example.azevedo.test.app-debugAndroidTest-5 C:\Users\L44Z\AndroidStudioProjects\azevedo\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources
